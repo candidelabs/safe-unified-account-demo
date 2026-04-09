@@ -102,11 +102,11 @@ Each chain needs **three separate endpoints** — this is the most common integr
 
 The Candide public endpoint (`https://api.candide.dev/public/v3/{chainId}`) serves as both bundler and paymaster, but it is NOT a JSON-RPC provider. The developer needs a separate RPC per chain (e.g., `publicnode.com`, `drpc.org`, Infura, Alchemy).
 
-Fetch supported chains from https://docs.candide.dev/wallet/bundler/public-endpoints/. For higher rate limits: [Candide Dashboard](https://dashboard.candide.dev/).
+Validate the developer's chain choices against https://docs.candide.dev/wallet/bundler/rpc-endpoints/ (same page as Q4). For the public endpoint URL pattern, see https://docs.candide.dev/wallet/bundler/public-endpoints/. For higher rate limits: [Candide Dashboard](https://dashboard.candide.dev/).
 
 ## Core Multichain Flow
 
-The orchestrator follows an 8-step flow. Get the exact code from Sources #1 and #2. Here is the conceptual flow — do not implement from this description alone:
+The orchestrator follows a 6-step flow. Get the exact code from Sources #1 and #2. Here is the conceptual flow — do not implement from this description alone:
 
 1. **Build MetaTransactions** — operation-agnostic: any `{ to, value, data }` works. Same tx for all chains, or different per chain.
 2. **Create UserOperations per chain** — one `createUserOperation()` call per chain.
