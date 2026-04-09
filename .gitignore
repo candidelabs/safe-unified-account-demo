@@ -1,4 +1,5 @@
 **/node_modules/**
 **/dist/**
 **/.env
-*.logsafe-unified-account.md
+*.log
+safe-unified-account.md
