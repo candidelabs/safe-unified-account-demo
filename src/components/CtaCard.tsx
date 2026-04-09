@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const SKILL_URL = "https://docs.candide.dev/wallet/guides/safe-unified-account-skill.md";
+const SKILL_URL = "https://docs.candide.dev/safe-unified-account-agent-skill.md";
 
 const PROMPTS = [
 	{
