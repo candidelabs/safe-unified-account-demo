@@ -146,7 +146,7 @@ const paymaster = new CandidePaymaster(paymasterUrl);
 // Step 1: Commit — gas estimation + paymaster fields (before signing)
 const [committedOp] = await paymaster.createSponsorPaymasterUserOperation(
   safeAccount, userOp, bundlerUrl, undefined,
-  { preVerificationGasPercentageMultiplier: 100, context: { signingPhase: "commit" } },
+  { context: { signingPhase: "commit" } },
 );
 
 // Step 2: Finalize — seal paymaster data (after signatures are set)
