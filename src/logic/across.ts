@@ -163,20 +163,24 @@ interface RawLog {
  * `spokePoolAddress` only — keeps us safe against unrelated contracts
  * emitting a similarly-shaped event.
  *
- * abstractionkit's `UserOperationReceipt.logs` is a JSON-stringified blob
- * (see `index.d.mts:110` — `logs: string`), not an array. We parse it
- * here so callers can pass the receipt's `logs` field directly.
+ * abstractionkit >= 0.4.0 types `UserOperationReceipt.logs` as a structured
+ * `Log[]`; older versions returned a JSON-stringified blob. Accept both so
+ * callers can pass the receipt's `logs` field directly regardless of version.
  */
 export function extractDepositIdFromLogs(
-  rawLogs: string,
+  rawLogs: string | RawLog[],
   spokePoolAddress: string,
 ): bigint {
   const lower = spokePoolAddress.toLowerCase();
   let parsed: RawLog[];
-  try {
-    parsed = JSON.parse(rawLogs) as RawLog[];
-  } catch (e) {
-    throw new Error(`Could not parse receipt logs JSON: ${(e as Error).message}`);
+  if (typeof rawLogs === 'string') {
+    try {
+      parsed = JSON.parse(rawLogs) as RawLog[];
+    } catch (e) {
+      throw new Error(`Could not parse receipt logs JSON: ${(e as Error).message}`);
+    }
+  } else {
+    parsed = rawLogs;
   }
   for (const log of parsed) {
     if (!log.address || log.address.toLowerCase() !== lower) continue;
