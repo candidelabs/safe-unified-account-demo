@@ -17,6 +17,19 @@ export class AccountNotFoundError extends Error {
 export class NotPasskeyOwnerError extends Error {
   constructor() { super("This account isn't controlled by a passkey."); this.name = 'NotPasskeyOwnerError'; }
 }
+/**
+ * Thrown when a provider/RPC read failed (transient, retriable). Distinct from
+ * NotPasskeyOwnerError so callers don't mistake a network blip for "no passkey".
+ * The original error is preserved on `cause`.
+ */
+export class ProviderError extends Error {
+  readonly cause: unknown;
+  constructor(cause: unknown) {
+    super("Couldn't reach the network. Please try again.");
+    this.name = 'ProviderError';
+    this.cause = cause;
+  }
+}
 
 async function rpc(rpcUrl: string, method: string, params: unknown[]): Promise<string> {
   const res = await fetch(rpcUrl, {
@@ -98,18 +111,25 @@ export async function resolvePasskeyFromAddress(
     }
     if (!deployed) continue;
 
-    let owners: string[] = [];
+    // A failure here is a provider/RPC error, not "no passkey" — surface it as
+    // a retriable ProviderError rather than collapsing it into NotPasskeyOwner.
+    let owners: string[];
     try {
       owners = await new SafeAccount(address).getOwners(chain.jsonRpcProvider);
-    } catch {
-      owners = [];
+    } catch (e) {
+      throw new ProviderError(e);
     }
     for (const owner of owners) {
-      const viaProxy = await readVerifierProxyPubkey(chain, owner);
+      let viaProxy: WebauthnPublicKey | null;
+      try {
+        viaProxy = await readVerifierProxyPubkey(chain, owner);
+      } catch (e) {
+        throw new ProviderError(e);
+      }
       if (viaProxy) return viaProxy;
     }
 
-    // Deployed here but no recognized passkey verifier-proxy owner.
+    // Owners retrieved cleanly and no owner is a recognized verifier proxy.
     throw new NotPasskeyOwnerError();
   }
 
