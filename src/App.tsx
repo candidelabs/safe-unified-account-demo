@@ -4,7 +4,9 @@ import {
 	createPasskey,
 	toLocalStorageFormat,
 	hydratePasskey,
+	fromAddressPubkey,
 } from "./logic/passkeys.ts";
+import { resolvePasskeyFromAddress } from "./logic/login.ts";
 import "./App.css";
 import { useLocalStorageState } from "./hooks/useLocalStorageState.ts";
 import { useState, useEffect, useMemo } from "react";
@@ -48,6 +50,16 @@ function App() {
 		}
 	};
 
+	const handleSignInClick = async (address: string) => {
+		setError(undefined);
+		try {
+			const pubkey = await resolvePasskeyFromAddress(address);
+			setPasskey(fromAddressPubkey(pubkey));
+		} catch (error) {
+			setError(error instanceof Error ? error.message : "Unknown error");
+		}
+	};
+
 	// In settings view: Escape returns to main view
 	useEffect(() => {
 		if (view !== "settings") return;
@@ -74,7 +86,10 @@ function App() {
 
 			{!passkey && (
 				<div className="view-main" key="view-main">
-					<PasskeyCard handleCreatePasskeyClick={handleCreatePasskeyClick} />
+					<PasskeyCard
+						handleCreatePasskeyClick={handleCreatePasskeyClick}
+						onSignIn={handleSignInClick}
+					/>
 				</div>
 			)}
 

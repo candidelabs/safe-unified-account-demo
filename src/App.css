@@ -2416,3 +2416,36 @@
     overflow-wrap: break-word;
   }
 }
+
+/* Sign-in-by-address: address field + secondary link toggle on PasskeyCard */
+.address-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+}
+.address-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.32);
+}
+.link-button {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.link-button:hover {
+  opacity: 1;
+}
