@@ -1,4 +1,4 @@
-import { keccak256, stringToBytes, isAddress } from 'viem';
+import { isAddress } from 'viem';
 import { SafeMultiChainSigAccountV1 as SafeAccount } from 'abstractionkit';
 import { accountChains, type AccountChainConfig } from './chains';
 
@@ -13,10 +13,6 @@ export class AccountNotFoundError extends Error {
 /** Thrown when the account exists but isn't controlled by a recognized passkey signer. */
 export class NotPasskeyOwnerError extends Error {
   constructor() { super("This account isn't controlled by a passkey."); this.name = 'NotPasskeyOwnerError'; }
-}
-/** Thrown when the passkey public key could not be read (zero/unreadable). */
-export class PubkeyUnreadableError extends Error {
-  constructor() { super("Couldn't read this account's passkey key."); this.name = 'PubkeyUnreadableError'; }
 }
 
 async function rpc(rpcUrl: string, method: string, params: unknown[]): Promise<string> {
@@ -35,7 +31,7 @@ async function isDeployed(chain: AccountChainConfig, address: string): Promise<b
   return code !== '0x' && code !== '0x0' && code.length > 2;
 }
 
-// ── Verifier-proxy path (primary) ──────────────────────────────────
+// ── Verifier-proxy pubkey read ─────────────────────────────────────
 //
 // This demo's deployed accounts are owned by a per-passkey SafeWebAuthnSigner
 // verifier proxy (Safe Passkey v0.2.1: Daimo P256 + RIP-7951). The proxy's
@@ -78,39 +74,10 @@ async function readVerifierProxyPubkey(
   return { x, y };
 }
 
-// ── Shared-signer path (fallback) ──────────────────────────────────
-//
-// keccak256("SafeWebAuthnSharedSigner.signer") - 1: the namespaced slot a
-// SafeWebAuthnSharedSigner writes (x, y, verifiers) into the Safe's own storage.
-// Kept as a fallback for accounts configured with the shared signer rather than
-// a per-key proxy.
-
-const SHARED_SIGNER_SLOT_BASE =
-  BigInt(keccak256(stringToBytes('SafeWebAuthnSharedSigner.signer'))) - 1n;
-
-function slotHex(slot: bigint): string {
-  return '0x' + slot.toString(16).padStart(64, '0');
-}
-
-async function readSharedSignerPubkey(
-  chain: AccountChainConfig,
-  address: string,
-): Promise<{ x: bigint; y: bigint } | null> {
-  const [xHex, yHex] = await Promise.all([
-    rpc(chain.jsonRpcProvider, 'eth_getStorageAt', [address, slotHex(SHARED_SIGNER_SLOT_BASE), 'latest']),
-    rpc(chain.jsonRpcProvider, 'eth_getStorageAt', [address, slotHex(SHARED_SIGNER_SLOT_BASE + 1n), 'latest']),
-  ]);
-  const x = BigInt(xHex);
-  const y = BigInt(yHex);
-  if (x === 0n && y === 0n) return null;
-  return { x, y };
-}
-
 /**
  * Resolve a Safe address to its passkey public key by reading on-chain state.
- * Walks `accountChains`, uses the first chain where the Safe is deployed, then:
- *   1. reads each owner's verifier-proxy bytecode (primary; CREATE2-validated), and
- *   2. falls back to the SafeWebAuthnSharedSigner storage slot.
+ * Walks `accountChains`, uses the first chain where the Safe is deployed, and
+ * reads (x, y) from each owner's verifier-proxy bytecode (CREATE2-validated).
  *
  * Demo-local stopgap until abstractionkit ships `getOwnerDetails`.
  */
@@ -130,7 +97,6 @@ export async function resolvePasskeyFromAddress(
     if (!deployed) continue;
     foundDeployed = true;
 
-    // 1. Verifier-proxy owners (this demo's model).
     let owners: string[] = [];
     try {
       owners = await new SafeAccount(address).getOwners(chain.jsonRpcProvider);
@@ -142,11 +108,7 @@ export async function resolvePasskeyFromAddress(
       if (viaProxy) return viaProxy;
     }
 
-    // 2. Shared-signer fallback.
-    const viaShared = await readSharedSignerPubkey(chain, address);
-    if (viaShared) return viaShared;
-
-    // Deployed here but no recognized passkey signer.
+    // Deployed here but no recognized passkey verifier-proxy owner.
     throw new NotPasskeyOwnerError();
   }
 
