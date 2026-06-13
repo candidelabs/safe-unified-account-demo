@@ -89,7 +89,6 @@ export async function resolvePasskeyFromAddress(
 ): Promise<WebauthnPublicKey> {
   if (!isAddress(address)) throw new InvalidAddressError();
 
-  let foundDeployed = false;
   for (const chain of accountChains) {
     let deployed = false;
     try {
@@ -98,7 +97,6 @@ export async function resolvePasskeyFromAddress(
       continue; // RPC hiccup on this chain — try the next
     }
     if (!deployed) continue;
-    foundDeployed = true;
 
     let owners: string[] = [];
     try {
@@ -115,5 +113,6 @@ export async function resolvePasskeyFromAddress(
     throw new NotPasskeyOwnerError();
   }
 
-  throw foundDeployed ? new NotPasskeyOwnerError() : new AccountNotFoundError();
+  // No account chain had the Safe deployed.
+  throw new AccountNotFoundError();
 }
