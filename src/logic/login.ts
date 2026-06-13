@@ -1,5 +1,8 @@
 import { isAddress } from 'viem';
-import { SafeMultiChainSigAccountV1 as SafeAccount } from 'abstractionkit';
+import {
+  SafeMultiChainSigAccountV1 as SafeAccount,
+  type WebauthnPublicKey,
+} from 'abstractionkit';
 import { accountChains, type AccountChainConfig } from './chains';
 
 /** Thrown when the entered string is not a valid EVM address. */
@@ -58,7 +61,7 @@ function blankFields(hex: string, fields: Array<[number, number]>): string {
 async function readVerifierProxyPubkey(
   chain: AccountChainConfig,
   ownerAddress: string,
-): Promise<{ x: bigint; y: bigint } | null> {
+): Promise<WebauthnPublicKey | null> {
   const code = await rpc(chain.jsonRpcProvider, 'eth_getCode', [ownerAddress, 'latest']);
   const body = code.startsWith('0x') ? code.slice(2) : code;
   const tpl = V_0_2_1_PROXY_RUNTIME_TEMPLATE.slice(2);
@@ -83,7 +86,7 @@ async function readVerifierProxyPubkey(
  */
 export async function resolvePasskeyFromAddress(
   address: string,
-): Promise<{ x: bigint; y: bigint }> {
+): Promise<WebauthnPublicKey> {
   if (!isAddress(address)) throw new InvalidAddressError();
 
   let foundDeployed = false;

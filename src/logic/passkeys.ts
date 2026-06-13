@@ -93,10 +93,10 @@ function hydratePasskey(stored: PasskeyStoredFormat): PasskeyLocalStorageFormat 
  * `id: ""` signals the signing path to use the discoverable (resident)
  * credential — see userOp.ts.
  */
-function fromAddressPubkey(pubkey: { x: bigint; y: bigint }): PasskeyStoredFormat {
+function fromAddressPubkey(pubkey: WebauthnPublicKey): PasskeyStoredFormat {
   return {
     id: '',
-    pubkeyCoordinates: pubkeyCoordinatesToJson({ x: pubkey.x, y: pubkey.y }),
+    pubkeyCoordinates: pubkeyCoordinatesToJson(pubkey),
   };
 }
 
