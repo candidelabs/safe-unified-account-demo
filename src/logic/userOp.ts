@@ -86,9 +86,12 @@ async function signAndSendMultiChainUserOps(
     getAssertion: async (challenge) => {
       // ox's `sign` takes an OxHex challenge; fromSafeWebauthn hands us a
       // Uint8Array. Convert at the boundary.
+      // A sign-in-by-address user has no stored credential id (passkey.id === "").
+      // Passkeys are discoverable (residentKey: 'required'), so omitting
+      // credentialId lets the authenticator resolve the resident credential.
       const { metadata, signature } = await sign({
         challenge: Hex.fromBytes(challenge),
-        credentialId: passkey.id as `0x${string}`,
+        ...(passkey.id ? { credentialId: passkey.id as `0x${string}` } : {}),
       });
       return webauthnSignatureFromAssertion({
         authenticatorData: metadata.authenticatorData,

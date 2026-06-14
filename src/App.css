@@ -2416,3 +2416,25 @@
     overflow-wrap: break-word;
   }
 }
+
+/* Sign-in-by-address: secondary link toggle on PasskeyCard.
+   The address field reuses the shared .address-input style above; scope only
+   the spacing to this card so it doesn't sit flush against the button. */
+.create-account-card .address-input {
+  margin-bottom: 0.75rem;
+}
+.link-button {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.link-button:hover {
+  opacity: 1;
+}

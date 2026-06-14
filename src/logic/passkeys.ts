@@ -87,8 +87,22 @@ function hydratePasskey(stored: PasskeyStoredFormat): PasskeyLocalStorageFormat 
   };
 }
 
+/**
+ * Build a stored passkey record from an on-chain-resolved public key, for the
+ * sign-in-by-address flow. There is no WebAuthn credential id on this device;
+ * `id: ""` signals the signing path to use the discoverable (resident)
+ * credential — see userOp.ts.
+ */
+function fromAddressPubkey(pubkey: WebauthnPublicKey): PasskeyStoredFormat {
+  return {
+    id: '',
+    pubkeyCoordinates: pubkeyCoordinatesToJson(pubkey),
+  };
+}
+
 export {
   createPasskey,
   toLocalStorageFormat,
   hydratePasskey,
+  fromAddressPubkey,
 };
